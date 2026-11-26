@@ -34,9 +34,9 @@ test.skip(
 test('each browser renders its own signed-in account', async ({ users }) => {
   const [a, b] = await users(2)
 
-  // /home is dynamic (under src/pages/(app)/), so it mounts the nav shell;
-  // '/' is the static landing and has no navigation.
-  await Promise.all([a.page.goto('/home'), b.page.goto('/home')])
+  // '/' is the dynamic public room (under src/pages/(app)/), so it mounts the
+  // app bar; '/about' is the static page and has none.
+  await Promise.all([a.page.goto('/'), b.page.goto('/')])
 
   // Email, not name. The page renders the *session's* `name || email`, while
   // `user.name` here comes from the LOCAL account registry — and the two are
@@ -55,7 +55,9 @@ test('each browser renders its own signed-in account', async ({ users }) => {
     // visibility.)
     await expect(user.page.getByTestId('nav-user-name')).toHaveText(/\S/, { timeout: 15_000 })
 
-    await user.page.getByRole('button', { name: 'Account menu' }).click()
+    await expect(user.page.getByTestId('nav-account-link')).toBeVisible()
+    await expect(user.page.getByTestId('nav-sign-out-button')).toBeVisible()
+    // The email is a screen-reader-only label inside the Account link.
     await expect(user.page.getByTestId('nav-user-email')).toHaveText(user.email, {
       timeout: 15_000,
     })
@@ -130,4 +132,13 @@ test('API status page shows local retry after first-load API failure', async ({ 
   await retryButton.click()
   await expect.poll(() => requestCount).toBeGreaterThan(requestsAfterFailure)
   expect(user.page.url()).toBe(urlAfterFailure)
+})
+
+test('signed-in user gets the composer and the account page', async ({ users }) => {
+  const [user] = await users(1)
+  await user.page.goto('/')
+  await expect(user.page.getByTestId('composer')).toBeVisible({ timeout: 15_000 })
+  await user.page.getByTestId('nav-account-link').click()
+  await expect(user.page).toHaveURL(/\/account$/)
+  await expect(user.page.getByTestId('account-page')).toBeVisible()
 })

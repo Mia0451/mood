@@ -44,3 +44,33 @@
   --color-shell: #fafafa;
   --color-shell-panel: #ffffff;
 }
+
+/* Mood — the app's own theme: deep night ink with one warm amber accent, so
+ * the generated images carry the colour and the chrome stays quiet. */
+[data-theme="mood"] {
+  color-scheme: dark;
+  --color-background: #0d0c12;
+  --color-foreground: #ece8f1;
+  --color-card: #16141d;
+  --color-card-foreground: #ece8f1;
+  --color-popover: #1b1924;
+  --color-popover-foreground: #ece8f1;
+  --color-primary: #f2a65a;
+  --color-primary-foreground: #1a1206;
+  --color-secondary: #1f1c28;
+  --color-secondary-foreground: #ece8f1;
+  --color-muted: #1f1c28;
+  --color-muted-foreground: #9a94a8;
+  --color-accent: #26222f;
+  --color-accent-foreground: #ece8f1;
+  --color-destructive: #ef5b5b;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(236, 232, 241, 0.09);
+  --color-input: rgba(236, 232, 241, 0.12);
+  --color-ring: #f2a65a;
+  --radius: 0.75rem;
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 6px 24px 0 rgba(0, 0, 0, 0.45);
+  --color-shell: #0d0c12;
+  --color-shell-panel: #16141d;
+}

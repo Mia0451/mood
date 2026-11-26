@@ -18,6 +18,11 @@
 
 export const THEMES = [
   {
+    id: 'mood',
+    label: 'Mood',
+    description: 'Night ink with a warm amber accent — the app theme.',
+  },
+  {
     id: 'slate',
     label: 'Slate',
     description: 'Neutral dark placeholder default. Replace with your own theme.',
