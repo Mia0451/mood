@@ -8,8 +8,9 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AuthOverlay, signOut, useAuthProfileReady } from 'deepspace'
+import { AuthOverlay, signOut, useAuthProfileReady, useQuery } from 'deepspace'
 import { LogOut } from 'lucide-react'
+import type { PrivateRoom } from '../schemas/chat-schema'
 import { Avatar, AvatarFallback, AvatarImage, Button } from './ui'
 
 export default function TopBar() {
@@ -50,6 +51,7 @@ export default function TopBar() {
                   {user.name || user.email}
                 </span>
                 <span className="sm:hidden">Account</span>
+                <UnreadBadge userId={user.id} />
                 <span data-testid="nav-user-email" className="sr-only">
                   {user.email}
                 </span>
@@ -74,5 +76,21 @@ export default function TopBar() {
 
       {showAuth && <AuthOverlay providers={['google']} onClose={() => setShowAuth(false)} />}
     </>
+  )
+}
+
+/** Total unread private messages across the caller's rooms. */
+function UnreadBadge({ userId }: { userId: string }) {
+  const { records } = useQuery<PrivateRoom>('private_rooms')
+  const total = records.reduce((n, r) => n + (r.data.unread?.[userId] ?? 0), 0)
+  if (!total) return null
+  return (
+    <span
+      data-testid="nav-unread"
+      aria-label={`${total} unread messages`}
+      className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground"
+    >
+      {total > 99 ? '99+' : total}
+    </span>
   )
 }
