@@ -11,7 +11,9 @@ import { jsonSchema, tool } from 'ai'
 import type { ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { BUILT_IN_TOOLS, applyAiToolDefaults } from 'deepspace/worker'
-import type { ToolSchema, CollectionSchema } from 'deepspace/worker'
+import type { AgentToolContext, ToolSchema, CollectionSchema } from 'deepspace/worker'
+import type { Env } from '../../worker'
+import { purgeTool } from './purge-tool'
 
 type ToolExecutor = (toolName: string, params: Record<string, unknown>) => Promise<unknown>
 
@@ -77,7 +79,7 @@ export function buildSystemPrompt(appName: string, schemas: CollectionSchema[]):
 // Tool definitions
 // ============================================================================
 
-export function buildTools(executor: ToolExecutor): ToolSet {
+export function buildTools(executor: ToolExecutor, context?: AgentToolContext<Env>): ToolSet {
   const tools: ToolSet = {}
 
   for (const def of BUILT_IN_TOOLS) {
@@ -93,6 +95,9 @@ export function buildTools(executor: ToolExecutor): ToolSet {
         executor(def.name, applyAiToolDefaults(def.name, params)),
     })
   }
+
+  // TEMPORARY one-off reset tool (admin-only); remove after use.
+  if (context) tools.admin_purge_mood_data = purgeTool(context)
 
   return tools
 }
