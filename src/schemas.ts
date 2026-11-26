@@ -12,6 +12,7 @@ import { usersSchema } from './schemas/users-schema'
 import { settingsSchema } from './schemas/admin-schema'
 import { publicImagesSchema } from './schemas/images-schema'
 import { generationUsageSchema, providerUsageSchema } from './schemas/usage-schema'
+import { imageReactionsSchema } from './schemas/reactions-schema'
 
 export const schemas: CollectionSchema[] = [
   usersSchema,
@@ -19,4 +20,5 @@ export const schemas: CollectionSchema[] = [
   publicImagesSchema,
   providerUsageSchema,
   generationUsageSchema,
+  imageReactionsSchema,
 ]

@@ -12,7 +12,7 @@
 
 import type { CollectionSchema } from 'deepspace/schema'
 
-export interface PublicImage {
+export type PublicImage = {
   ownerId: string
   /** Stored key in the app's public file scope. */
   r2Key: string
