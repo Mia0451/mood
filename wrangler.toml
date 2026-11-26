@@ -32,6 +32,10 @@ APP_NAME = "mood"
 # Exact comma-separated native callback URIs. Set this before deploying an
 # Expo client, for example: "myapp://auth/callback".
 NATIVE_AUTH_REDIRECT_URIS = ""
+# mood image router: tried in order, mock is always the final fallback.
+# Local dev/test ignores this and uses mock only (see src/ai/image-router.ts).
+IMAGE_PROVIDER_ORDER = "deepspace,google,openai,meta,mock"
+# Per-user daily cap defaults to 5 deployed / 50 locally; set DAILY_IMAGE_LIMIT to override.
 
 [[migrations]]
 tag = "v1"

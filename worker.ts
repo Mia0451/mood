@@ -118,6 +118,18 @@ export interface Env extends DOBindings<typeof __DO_MANIFEST__> {
    * an authenticated app owner/admin. deepspace dev/test set it locally.
    */
   ALLOW_DEBUG_ROUTES?: string
+  // ── mood image router (src/ai/image-router.ts) ──
+  /** Comma-separated provider order when deployed (wrangler.toml [vars]). */
+  IMAGE_PROVIDER_ORDER?: string
+  /** Provider order in local dev/test; defaults to `mock` only. */
+  IMAGE_PROVIDER_ORDER_DEV?: string
+  /** Per-user daily generation cap (public + private). */
+  DAILY_IMAGE_LIMIT?: string
+  /** Optional direct-provider keys — set with `npx deepspace secrets set`. */
+  GOOGLE_API_KEY?: string
+  OPENAI_API_KEY?: string
+  META_API_KEY?: string
+  META_IMAGE_MODEL?: string
 }
 
 export type AppContext = { Bindings: Env }
