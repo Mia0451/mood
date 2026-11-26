@@ -371,6 +371,57 @@ npx deepspace secrets set OPENAI_API_KEY=…   # enable a direct provider (then 
 - **Local uploads hit real storage:** `deepspace dev` uses the real platform file service, so local generations consume the app's file allocation (mock images are ~20 KB).
 - **Changing the cap or order:** edit `wrangler.toml [vars]` (`IMAGE_PROVIDER_ORDER`, `DAILY_IMAGE_LIMIT`) and redeploy.
 
+### 10.1 Inspecting and cleaning up production data
+
+`npx deepspace agent tools/invoke` calls the app's agent tools **as the logged-in CLI user** (the owner is admin). The built-in `records_*` tools still obey each collection's RBAC, so they can read everything an admin can read but **cannot delete** mood data — every mood collection has `delete: false` for all roles by design.
+
+**Inspect** (repeat per collection: `public_images`, `image_reactions`, `private_rooms`, `private_messages`, `generation_usage`, `provider_usage`):
+
+```bash
+npx deepspace agent tools mood --json                 # discover tools + input schemas
+echo '{"collection":"public_images","limit":500}' > q.json
+npx deepspace agent invoke mood records_query --input-file q.json --json
+```
+
+Admins see all `public_images` and usage rows, but only chats they participate in (`'shared'` read policy).
+
+**Delete stored files** (public app scope; one key per call):
+
+```bash
+npx deepspace app files list --json                   # keys + storage used
+npx deepspace app files rm moods/<imageId>.png
+npx deepspace app files list --private                # your own private folder only
+npx deepspace app files rm <key> --private
+```
+
+Files in *other users'* private folders (chat media) are not reachable from the CLI; they can only be deleted by worker code via `appFiles(env, { scope: 'self', userId }).delete(key)`.
+
+**Full reset of records and their files** (used once on 2026-11-26 to clear the launch play session). Because no role can delete records, the reset is a temporary, admin-only agent tool that runs RBAC-off through the same `createActionTools` the server actions use:
+
+1. Restore the tool from history and deploy it (DeepSpace source requires a committed tree):
+   ```bash
+   git show 1b63a5e -- src/ai | git apply     # adds src/ai/purge-tool.ts, registers it in buildTools
+   git commit -am "TEMP: admin-only purge tool"
+   npx deepspace deploy
+   ```
+   `admin_purge_mood_data` refuses non-admins and requires `confirm: "PURGE ALL MOOD DATA"`. It walks `private_messages`, `private_rooms`, `image_reactions`, `public_images`, `generation_usage`, `provider_usage`, deletes each record, and deletes referenced files (public images from the app scope; voice/image chat media from each sender's private scope). It returns per-collection counts and errors.
+2. Run it as the owner:
+   ```bash
+   echo '{"confirm":"PURGE ALL MOOD DATA"}' > purge.json
+   npx deepspace agent invoke mood admin_purge_mood_data --input-file purge.json --json
+   ```
+3. Verify every collection reports `"count":0` (the `records_query` loop above) and check storage with `npx deepspace app files list`.
+4. **Remove the tool immediately** and confirm it is gone from the live app:
+   ```bash
+   git revert --no-edit HEAD
+   npx deepspace deploy
+   npx deepspace agent tools mood --json | grep -c admin_purge   # expect 0
+   ```
+
+Never leave the purge tool deployed: it is exposed through the agent HTTP/MCP surface for as long as it exists.
+
+To remove a single image rather than everything, use the in-app admin **Take down** (it hides the record and deletes the file) instead of a reset.
+
 ---
 
 ## 11. Known limitations and future work
@@ -381,4 +432,4 @@ npx deepspace secrets set OPENAI_API_KEY=…   # enable a direct provider (then 
 - **Safety:** no prompt filter, no user blocking/reporting for DMs; consider both before broad launch.
 - **Voice notes** are not transcribed; private chat paintings don't appear on the account page.
 - **Safari < 16.4** omits `Sec-Fetch-Site`, so cookie-based private media reads return 401 there.
-- **Orphaned local test files** (~500 KB of mock PNGs under `moods/`) exist in production storage from local test runs and can be removed with `npx deepspace app files rm`.
+- **Local test runs write to real storage.** Public mock images were removed on 2026-11-26 (§10.1); ~82 KiB of mock chat media remains in the test accounts' private folders, unreferenced and unreachable from the CLI.
